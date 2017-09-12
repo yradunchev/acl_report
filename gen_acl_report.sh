@@ -1,11 +1,13 @@
 #!/bin/bash
 
 # purpose: create ACL report on 1 level depth directories and output to text file report
-# usage: ./gen_acl_report.sh start_path report
-# the above command will generate a file called "report_20100203_YYYYMMDD_HHMMSS.txt"
+# usage: ./gen_acl_report.sh startpath maxdepth
+# the above command will generate a file called "YYYYMMDDHHMMSS_startpath.report"
 
 # created by: aaron
 # created at: 20100203
+# modified by: yordan
+# modified at: 20170912
 
 # debug flag
 DEBUG="on"
@@ -18,9 +20,10 @@ function DEBUG()
 
 # set path to find files
 STARTPATH="$1"
+MAXDEPTH="$2"
 
 # set report output
-REPORT="$2_`date +%Y%m_%H%M%S`.txt"
+REPORT="`date +%Y%m%d%H%M%S`_$STARTPATH.report"
 
 # set temp report file
 ACLFILELIST=/tmp/acl_file_list.txt
@@ -28,6 +31,7 @@ ACLFILELIST=/tmp/acl_file_list.txt
 DEBUG echo "REPORT is = $REPORT"
 DEBUG echo "ACLFILELIST is = $ACLFILELIST"
 DEBUG echo "STARTPATH is = $STARTPATH"
+DEBUG echo "MAXDEPTH is = $MAXDEPTH"
 
 # build acl list
 function reportHeader
@@ -45,9 +49,8 @@ DEBUG echo "...inside function getACL"
 # find all files excluding .svn
 #find $STARTPATH -path '*.svn' -prune -o -type f -exec getfacl {} \; > $ACLFILELIST
 # find all top level directories
-DEBUG echo "executing find $1"
-#find $STARTPATH -maxdepth 1 -prune -o -type d -exec getfacl {} \; > $ACLFILELIST
-find $STARTPATH ! -path $STARTPATH -maxdepth 1 -type d | xargs getfacl > $ACLFILELIST
+DEBUG echo "executing find $STARTPATH"
+find $STARTPATH -maxdepth $MAXDEPTH ! -path $STARTPATH -type d | xargs getfacl > $ACLFILELIST
 DEBUG echo "...end of function getACL"
 }
 
@@ -55,7 +58,7 @@ function groupsSummary
 {
 DEBUG echo "...inside function groupsSummary"
 echo "Group Summary:" >> $REPORT
-echo "-----------------------------------" >> $REPORT
+echo " " >> $REPORT
 cat $ACLFILELIST | grep "^group:[a-zA-Z]" | sort | uniq -c >> $REPORT
 echo " " >> $REPORT
 #echo "Default Group Summary:" >> $REPORT
@@ -63,7 +66,7 @@ echo " " >> $REPORT
 #cat $ACLFILELIST | grep "^default:group:[a-zA-Z]" | sort | uniq -c >> $REPORT
 #echo " " >> $REPORT
 echo "Users for each group:" >> $REPORT
-echo "-----------------------------------" >> $REPORT
+echo " " >> $REPORT
 for a in `cat $ACLFILELIST | grep "^group:[a-zA-Z]" | sort | awk -F: '{print $2}' | uniq`
 do
 echo $a >> $REPORT
@@ -138,7 +141,8 @@ DEBUG echo "...end of function otherSummary"
 function listofFiles
 {
 DEBUG echo "...list of directories"
-echo "List of directories" >> $REPORT
+echo "List of directories:" >> $REPORT
+echo " " >> $REPORT
 cat $ACLFILELIST | grep "# file: " >> $REPORT
 echo "===================================" >> $REPORT
 DEBUG echo "...end of list of directories"
@@ -147,7 +151,7 @@ DEBUG echo "...end of list of directories"
 function appendACL
 {
 DEBUG echo "...appending acl contents"
-echo "ACL list of directories" >> $REPORT
+echo "ACL list of directories:" >> $REPORT
 echo " " >> $REPORT
 cat $ACLFILELIST >> $REPORT
 echo "===================================" >> $REPORT
@@ -160,6 +164,8 @@ DEBUG echo "...removing temp files for ACL"
 rm $ACLFILELIST
 DEBUG echo "...removing temp files for ACL done"
 }
+
+# comment out reports you do not need
 
 reportHeader
 getACL
