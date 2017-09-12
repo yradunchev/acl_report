@@ -169,6 +169,6 @@ groupsSummary
 #otherSummary
 listofFiles
 appendACL
-findGroups
+#findGroups
 
 removeACL
