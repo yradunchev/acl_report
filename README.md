@@ -7,3 +7,7 @@ Builds a header with date and time of report.
 Finds the users and groups and counts the amount of times they appear in the report for a summary.   
 Appends the full report of all the files with the ACL.   
 
+# todo
+
+[ ] add maxdepth parameter
+
