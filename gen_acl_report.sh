@@ -46,11 +46,9 @@ DEBUG echo "...end of function reportHeader"
 function getACL
 {
 DEBUG echo "...inside function getACL"
-# find all files excluding .svn
-#find $STARTPATH -path '*.svn' -prune -o -type f -exec getfacl {} \; > $ACLFILELIST
-# find all top level directories
 DEBUG echo "executing find $STARTPATH"
-find $STARTPATH -maxdepth $MAXDEPTH ! -path $STARTPATH -type d | xargs getfacl > $ACLFILELIST
+find $STARTPATH -maxdepth $MAXDEPTH ! -path $STARTPATH -type d -exec \
+  getfacl --tabular --omit-header --absolute-names {} \; > $ACLFILELIST
 DEBUG echo "...end of function getACL"
 }
 
@@ -59,15 +57,15 @@ function groupsSummary
 DEBUG echo "...inside function groupsSummary"
 echo "Group Summary:" >> $REPORT
 echo " " >> $REPORT
-cat $ACLFILELIST | grep "^group:[a-zA-Z]" | sort | uniq -c >> $REPORT
-echo " " >> $REPORT
+cat $ACLFILELIST | grep "group" | sort | awk '{print $2}' | uniq >> $REPORT
+#echo " " >> $REPORT
 #echo "Default Group Summary:" >> $REPORT
 #echo " " >> $REPORT
-#cat $ACLFILELIST | grep "^default:group:[a-zA-Z]" | sort | uniq -c >> $REPORT
-#echo " " >> $REPORT
+#cat $ACLFILELIST | grep "GROUP" | sort | awk '{print $2}' | uniq >> $REPORT
+echo " " >> $REPORT
 echo "Users for each group:" >> $REPORT
 echo " " >> $REPORT
-for a in `cat $ACLFILELIST | grep "^group:[a-zA-Z]" | sort | awk -F: '{print $2}' | uniq`
+for a in `cat $ACLFILELIST | grep "group" | sort | awk '{print $2}' | uniq`
 do
 echo $a >> $REPORT
 for g in `cat /etc/group | grep $a`
@@ -75,9 +73,9 @@ do
 echo $g | awk -F: '{print "\t"$4}' >> $REPORT
 done
 done
+#echo " " >> $REPORT
 #echo "Users for each default group:" >> $REPORT
-#echo "-----------------------------------" >> $REPORT
-#for a in `cat $ACLFILELIST | grep "^default:group:[a-zA-Z]" | sort | awk -F: '{print $3}' | uniq`
+#for a in `cat $ACLFILELIST | grep "GROUP" | sort | awk '{print $2}' | uniq`
 #do
 #echo $a >> $REPORT
 #for g in `cat /etc/group | grep $a`
