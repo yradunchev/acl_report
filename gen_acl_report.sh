@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # purpose: create ACL report on 1 level depth directories and output to text file report
-# usage: ./gen_acl_report.sh startpath maxdepth
+# usage: ./gen_acl_report.sh startpath 
 # the above command will generate a file called "YYYYMMDDHHMMSS_startpath.report"
 
 # created by: aaron
@@ -20,10 +20,9 @@ function DEBUG()
 
 # set path to find files
 STARTPATH="$1"
-MAXDEPTH="$2"
 
 # set report output
-REPORT="`date +%Y%m%d%H%M%S`_$STARTPATH.report"
+REPORT="`date +%Y%m%d%H%M%S`.report"
 
 # set temp report file
 ACLFILELIST=/tmp/acl_file_list.txt
@@ -38,7 +37,7 @@ function reportHeader
 {
 DEBUG echo "...inside function reportHeader"
 echo "ACL REPORT" >> $REPORT
-echo "Started on `date`" >> $REPORT
+echo "`date`" >> $REPORT
 echo "===================================" >> $REPORT
 DEBUG echo "...end of function reportHeader"
 }
@@ -47,7 +46,7 @@ function getACL
 {
 DEBUG echo "...inside function getACL"
 DEBUG echo "executing find $STARTPATH"
-find $STARTPATH -maxdepth $MAXDEPTH ! -path $STARTPATH -type d -exec \
+find $STARTPATH ! -path $STARTPATH -type d -name "*_to_*" -exec \
   getfacl --tabular --omit-header --absolute-names {} \; > $ACLFILELIST
 DEBUG echo "...end of function getACL"
 }
@@ -55,16 +54,16 @@ DEBUG echo "...end of function getACL"
 function groupsSummary
 {
 DEBUG echo "...inside function groupsSummary"
-echo "Group Summary:" >> $REPORT
-echo " " >> $REPORT
+echo -e "\nGroups Summary:" >> $REPORT
+echo -e "---------------\n" >> $REPORT
 cat $ACLFILELIST | grep "group" | sort | awk '{print $2}' | uniq >> $REPORT
 #echo " " >> $REPORT
 #echo "Default Group Summary:" >> $REPORT
 #echo " " >> $REPORT
 #cat $ACLFILELIST | grep "GROUP" | sort | awk '{print $2}' | uniq >> $REPORT
 echo " " >> $REPORT
-echo "Users for each group:" >> $REPORT
-echo " " >> $REPORT
+echo "Users in each group:" >> $REPORT
+echo -e "--------------------\n " >> $REPORT
 for a in `cat $ACLFILELIST | grep "group" | sort | awk '{print $2}' | uniq`
 do
 echo $a >> $REPORT
@@ -83,7 +82,7 @@ done
 #echo $g | awk -F: '{print "\t"$4}' >> $REPORT
 #done
 #done
-echo "===================================" >> $REPORT
+echo -e "\n===================================" >> $REPORT
 DEBUG echo "...end of function groupsSummary"
 }
 
@@ -97,7 +96,7 @@ echo " " >> $REPORT
 echo "Default User Summary:" >> $REPORT
 echo " " >> $REPORT
 cat $ACLFILELIST | grep "^default:user:" | sort | uniq -c >> $REPORT
-echo "===================================" >> $REPORT
+echo -e "\n===================================" >> $REPORT
 DEBUG echo "...end of function usersSummary"
 }
 
@@ -111,7 +110,7 @@ echo " " >> $REPORT
 echo "Default Mask Summary:" >> $REPORT
 echo " " >> $REPORT
 cat $ACLFILELIST | grep "^default:mask:" | sort | uniq -c >> $REPORT
-echo "===================================" >> $REPORT
+echo -e "\n===================================" >> $REPORT
 DEBUG echo "...end of function maskSummary"
 }
 
@@ -132,7 +131,7 @@ echo "Default Other Summary:" >> $REPORT
 echo " " >> $REPORT
 cat $ACLFILELIST | grep "^default:other:" | sort | uniq -c >> $REPORT
 echo " " >> $REPORT
-echo "===================================" >> $REPORT
+echo -e "\n===================================" >> $REPORT
 DEBUG echo "...end of function otherSummary"
 }
 
@@ -142,17 +141,17 @@ DEBUG echo "...list of directories"
 echo "List of directories:" >> $REPORT
 echo " " >> $REPORT
 cat $ACLFILELIST | grep "# file: " >> $REPORT
-echo "===================================" >> $REPORT
+echo -e "\n===================================" >> $REPORT
 DEBUG echo "...end of list of directories"
 }
 
 function appendACL
 {
 DEBUG echo "...appending acl contents"
-echo "ACL list of directories:" >> $REPORT
+echo "ACL of directories:" >> $REPORT
 echo " " >> $REPORT
 cat $ACLFILELIST >> $REPORT
-echo "===================================" >> $REPORT
+echo -e "\n===================================" >> $REPORT
 DEBUG echo "...end of acl contents appending"
 }
 
